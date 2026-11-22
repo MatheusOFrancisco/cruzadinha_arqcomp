@@ -11,40 +11,24 @@
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600;700&family=Kanit:ital,wght@0,600;1,700;1,800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
   <script src="script.js" defer></script>
-  <link rel="icon" href="forza-logo.svg" type="image/png">
 </head>
 <body>
-  <!-- Cenário decorativo: pôr do sol, monte Fuji e colinas -->
-  <div class="horizon-bg" aria-hidden="true">
-    <svg viewBox="0 0 1600 520" preserveAspectRatio="xMidYMax slice" xmlns="http://www.w3.org/2000/svg">
-      <defs>
-        <linearGradient id="bg-sun" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#ffd86b"/>
-          <stop offset="1" stop-color="#ff6a3a"/>
-        </linearGradient>
-        <linearGradient id="bg-fuji" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0" stop-color="#5a3f98"/>
-          <stop offset="1" stop-color="#2a2060"/>
-        </linearGradient>
-      </defs>
-      <circle cx="1130" cy="330" r="150" fill="url(#bg-sun)" opacity=".9"/>
-      <path d="M180 520 C410 470 560 270 690 196 L778 196 C906 270 1060 470 1290 520 Z" fill="url(#bg-fuji)"/>
-      <path d="M690 196 L778 196 C800 210 812 224 822 240 L786 226 L752 246 L724 226 L654 244 C668 224 678 208 690 196 Z" fill="#ffe9f1" opacity=".92"/>
-      <path d="M0 520 V430 C200 395 360 440 540 455 C760 474 900 420 1120 432 C1300 442 1460 410 1600 424 V520 Z" fill="#1c1652"/>
-      <path d="M0 520 V488 C260 470 520 500 800 490 C1080 480 1340 500 1600 484 V520 Z" fill="#120f3b"/>
-      <g fill="#ff9fc2" opacity=".75">
-        <ellipse cx="260" cy="150" rx="5" ry="3" transform="rotate(30 260 150)"/>
-        <ellipse cx="410" cy="260" rx="4" ry="2.5" transform="rotate(-20 410 260)"/>
-        <ellipse cx="980" cy="110" rx="5" ry="3" transform="rotate(50 980 110)"/>
-        <ellipse cx="1340" cy="220" rx="4" ry="2.5" transform="rotate(10 1340 220)"/>
-        <ellipse cx="1480" cy="90" rx="5" ry="3" transform="rotate(-40 1480 90)"/>
-        <ellipse cx="120" cy="320" rx="4" ry="2.5" transform="rotate(70 120 320)"/>
-      </g>
-    </svg>
+  <!-- Cenário decorativo em CSS puro -->
+  <div class="horizon-bg">
+    <div class="bg-sun"></div>
+    <div class="bg-fuji">
+      <div class="bg-fuji-snow"></div>
+    </div>
+    <div class="bg-hill-back"></div>
+    <div class="bg-hill-front"></div>
+    <div class="sakura-petal petal-1"></div>
+    <div class="sakura-petal petal-2"></div>
+    <div class="sakura-petal petal-3"></div>
+    <div class="sakura-petal petal-4"></div>
   </div>
 
   <header class="topbar">
-    <a class="brand" href="index.html" aria-label="Horizon Cross, início"><span class="brand-mark"></span>HORIZON <b>CROSS</b></a>
+    <a class="brand" href="index.html"><span class="brand-mark"></span>HORIZON <b>CROSS</b></a>
     <p class="topbar-tag"><i class="pip"></i> Festival no Japão</p>
   </header>
 
@@ -58,20 +42,23 @@
       </div>
     </section>
 
-    <section class="status-bar" aria-label="Status da partida">
+    <section class="status-bar">
       <div><span class="status-label">Piloto</span><strong id="player-display">PILOTO 1</strong></div>
       <div><span class="status-label">Palavras</span><strong id="word-total">--</strong></div>
       <div><span class="status-label">Acertos</span><strong id="score">0 / 0</strong></div>
       <div><span class="status-label">Status</span><strong id="game-status" class="status-ready">Aguardando</strong></div>
     </section>
 
-    <section class="game-layout" aria-label="Jogo de palavras cruzadas">
+    <section class="game-layout">
       <div class="board-panel panel">
         <div class="panel-heading">
-          <div><h2>Grade</h2><p class="panel-sub">Digite nas casas. Cruzamentos dividem a mesma letra.</p></div>
+          <div>
+            <h2>Grade</h2>
+            <p class="panel-sub">Digite nas casas. Cruzamentos dividem a mesma letra.</p>
+          </div>
         </div>
         <div class="board-viewport">
-          <div id="crossword" class="crossword" aria-label="Tabuleiro de palavras cruzadas"></div>
+          <div id="crossword" class="crossword"></div>
         </div>
         <div class="board-legend">
           <span><i class="legend-cell"></i> Casa editável</span>
@@ -83,135 +70,114 @@
           <button id="reset-button" class="button button-secondary" type="button">Reiniciar</button>
           <button id="new-button" class="button button-ghost" type="button">Nova partida</button>
         </div>
-        <p id="feedback" class="feedback" role="status" aria-live="polite">Escolha uma pista ou uma casa para começar.</p>
+        <p id="feedback" class="feedback">Escolha uma pista ou uma casa para começar.</p>
       </div>
 
-      <section class="garage-panel panel" aria-labelledby="garage-title">
+      <section class="garage-panel panel">
         <div class="panel-heading">
-          <div><h2 id="garage-title">Garagem</h2><p class="panel-sub">Peças instaladas: <strong id="parts-count">0 / 12</strong></p></div>
+          <div>
+            <h2 id="garage-title">Garagem</h2>
+            <p class="panel-sub">Peças instaladas: <strong id="parts-count">0 / 12</strong></p>
+          </div>
           <span class="build-badge" id="build-badge">Garagem vazia</span>
         </div>
 
         <div class="car-stage">
-          <svg id="car-svg" class="car" viewBox="0 0 600 250" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Carro esportivo em montagem. As peças aparecem conforme você acerta as palavras.">
-            <defs>
-              <linearGradient id="primer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#c3c9e6"/><stop offset="1" stop-color="#7c85ae"/></linearGradient>
-              <linearGradient id="paint" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff8a3a"/><stop offset="1" stop-color="#e03a0c"/></linearGradient>
-              <linearGradient id="glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5f0ff"/><stop offset="1" stop-color="#3b5bb0"/></linearGradient>
-              <linearGradient id="beam" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff2b8" stop-opacity=".75"/><stop offset="1" stop-color="#fff2b8" stop-opacity="0"/></linearGradient>
-              <filter id="glow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-              <clipPath id="body-clip"><path d="M70 170 L64 150 Q62 130 82 125 L190 116 L345 114 L470 128 Q528 136 535 158 L535 170 L494 170 A44 44 0 0 0 406 170 L194 170 A44 44 0 0 0 106 170 Z"/></clipPath>
-            </defs>
-
-            <ellipse class="platform" cx="300" cy="206" rx="275" ry="12"/>
-            <path class="road-line" d="M20 222 H580"/>
+          <div id="car-canvas" class="car-blueprint">
+            <div class="car-platform"></div>
+            <div class="car-road-line"></div>
 
             <!-- 01 Chassi -->
-            <g class="part locked" data-part="chassi">
-              <path class="metal-dark" d="M78 168 H522 L514 180 H88 Z"/>
-              <path class="metal" d="M150 174 H450 V177 H150 Z"/>
-            </g>
+            <div class="car-part locked" data-part="chassi">
+              <div class="part-chassi-base"></div>
+              <div class="part-chassi-rail"></div>
+            </div>
 
             <!-- 03 Escapamento -->
-            <g class="part locked" data-part="escapamento">
-              <rect class="metal" x="88" y="188.5" width="412" height="5" rx="2.5"/>
-              <rect class="metal-dark" x="318" y="184" width="76" height="14" rx="6"/>
-              <rect class="metal" x="56" y="186" width="30" height="9" rx="3"/>
-            </g>
+            <div class="car-part locked" data-part="escapamento">
+              <div class="part-exhaust-pipe"></div>
+              <div class="part-exhaust-muffler"></div>
+              <div class="part-exhaust-tip"></div>
+            </div>
 
             <!-- 06 Carroceria -->
-            <g class="part locked" data-part="carroceria">
-              <path class="body-paint" d="M70 170 L64 150 Q62 130 82 125 L190 116 L345 114 L470 128 Q528 136 535 158 L535 170 L494 170 A44 44 0 0 0 406 170 L194 170 A44 44 0 0 0 106 170 Z"/>
-              <path class="body-line" d="M92 135 L190 126 L345 124 L470 138"/>
-              <path class="body-line" d="M500 163 H535"/>
-            </g>
+            <div class="car-part locked" data-part="carroceria">
+              <div class="part-body-shell"></div>
+            </div>
 
             <!-- 12 Pintura (listras) -->
-            <g class="part locked" data-part="pintura" clip-path="url(#body-clip)">
-              <path class="livery-white" d="M60 140 L540 152 L540 157 L60 145 Z"/>
-              <path class="livery-pink" d="M60 148 L540 160 L540 163 L60 151 Z"/>
-            </g>
+            <div class="car-part locked" data-part="pintura">
+              <div class="part-livery-stripe-white"></div>
+              <div class="part-livery-stripe-pink"></div>
+            </div>
 
-            <!-- 02 Motor (visor de raio-x na lateral) -->
-            <g class="part locked" data-part="motor">
-              <rect class="cutaway" x="212" y="130" width="176" height="38" rx="8"/>
-              <rect class="engine-block" x="224" y="150" width="152" height="14" rx="3"/>
-              <rect class="engine-head" x="230" y="140" width="140" height="11" rx="2"/>
-              <rect class="engine-accent" x="248" y="133" width="104" height="8" rx="3"/>
-              <circle class="engine-pulley" cx="224" cy="157" r="6"/>
-              <circle class="engine-pulley" cx="376" cy="157" r="6"/>
-            </g>
-
-            <!-- 04 Roda traseira -->
-            <g class="part locked" data-part="roda-traseira">
-              <g transform="translate(150 170)">
-                <g class="wheel-spin">
-                  <circle class="tire" r="34"/>
-                  <circle class="rim" r="23"/>
-                  <circle class="disc" r="17"/>
-                  <path class="spoke" d="M0 0 L0 -21 M0 0 L20 -6.5 M0 0 L12.3 17 M0 0 L-12.3 17 M0 0 L-20 -6.5"/>
-                  <circle class="hub" r="5"/>
-                </g>
-                <path class="caliper" d="M-9 -17 L9 -17 L7 -11 L-7 -11 Z"/>
-              </g>
-            </g>
-
-            <!-- 05 Roda dianteira -->
-            <g class="part locked" data-part="roda-dianteira">
-              <g transform="translate(450 170)">
-                <g class="wheel-spin">
-                  <circle class="tire" r="34"/>
-                  <circle class="rim" r="23"/>
-                  <circle class="disc" r="17"/>
-                  <path class="spoke" d="M0 0 L0 -21 M0 0 L20 -6.5 M0 0 L12.3 17 M0 0 L-12.3 17 M0 0 L-20 -6.5"/>
-                  <circle class="hub" r="5"/>
-                </g>
-                <path class="caliper" d="M-9 -17 L9 -17 L7 -11 L-7 -11 Z"/>
-              </g>
-            </g>
+            <!-- 02 Motor -->
+            <div class="car-part locked" data-part="motor">
+              <div class="part-engine-bay">
+                <div class="part-engine-head"></div>
+                <div class="part-engine-block"></div>
+              </div>
+            </div>
 
             <!-- 07 Cabine -->
-            <g class="part locked" data-part="cabine">
-              <path class="body-paint" d="M188 118 Q222 72 262 66 L318 66 Q338 66 352 84 L380 117 Z"/>
-              <path class="body-paint" d="M356 98 L372 100 L370 106 L356 104 Z"/>
-            </g>
+            <div class="car-part locked" data-part="cabine">
+              <div class="part-cabin-roof"></div>
+            </div>
 
             <!-- 08 Vidros -->
-            <g class="part locked" data-part="vidros">
-              <path class="glass" d="M206 114 Q232 80 264 75 L292 75 L292 114 Z"/>
-              <path class="glass" d="M299 75 L318 75 Q331 75 341 87 L362 114 L299 114 Z"/>
-              <path class="shine" d="M238 104 L262 80 L271 80 L247 104 Z"/>
-            </g>
+            <div class="car-part locked" data-part="vidros">
+              <div class="part-glass-rear"></div>
+              <div class="part-glass-front"></div>
+            </div>
+
+            <!-- 04 Roda traseira -->
+            <div class="car-part locked" data-part="roda-traseira">
+              <div class="part-wheel wheel-rear">
+                <div class="wheel-rim">
+                  <div class="wheel-hub"></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 05 Roda dianteira -->
+            <div class="car-part locked" data-part="roda-dianteira">
+              <div class="part-wheel wheel-front">
+                <div class="wheel-rim">
+                  <div class="wheel-hub"></div>
+                </div>
+              </div>
+            </div>
 
             <!-- 09 Faróis -->
-            <g class="part locked" data-part="farois">
-              <path class="beam" d="M535 152 L598 130 L598 186 Z"/>
-              <path class="headlight" d="M507 139 L534 149 L535 158 L509 153 Z"/>
-            </g>
+            <div class="car-part locked" data-part="farois">
+              <div class="part-headlight"></div>
+              <div class="part-headlight-beam"></div>
+            </div>
 
             <!-- 10 Lanternas -->
-            <g class="part locked" data-part="lanternas">
-              <path class="taillight" d="M63 133 L79 129 L81 141 L65 146 Z"/>
-            </g>
+            <div class="car-part locked" data-part="lanternas">
+              <div class="part-taillight"></div>
+            </div>
 
             <!-- 11 Aerofólio -->
-            <g class="part locked" data-part="aerofolio">
-              <path class="wing-strut" d="M84 108 H90 V124 H84 Z"/>
-              <path class="wing-strut" d="M118 106 H124 V121 H118 Z"/>
-              <path class="wing" d="M54 98 L150 94 L152 103 L56 107 Z"/>
-              <path class="wing-edge" d="M52 93 H60 L62 109 H54 Z"/>
-              <path class="wing-edge" d="M146 90 H154 L156 105 H148 Z"/>
-            </g>
-          </svg>
+            <div class="car-part locked" data-part="aerofolio">
+              <div class="part-wing-strut strut-left"></div>
+              <div class="part-wing-strut strut-right"></div>
+              <div class="part-wing-blade"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="build-progress" id="build-progress" role="progressbar" aria-label="Progresso da montagem" aria-valuemin="0" aria-valuemax="12" aria-valuenow="0"><i id="build-fill"></i></div>
-        <ol id="parts-list" class="parts-list" aria-label="Lista de peças do carro"></ol>
+        <div class="build-progress" id="build-progress"><i id="build-fill"></i></div>
+        <ol id="parts-list" class="parts-list"></ol>
       </section>
 
       <aside class="clues-panel panel">
         <div class="panel-heading">
-          <div><h2>Pistas</h2><p class="panel-sub">Clique numa pista para destacar a palavra na grade.</p></div>
+          <div>
+            <h2>Pistas</h2>
+            <p class="panel-sub">Clique numa pista para destacar a palavra na grade.</p>
+          </div>
           <span class="clue-count" id="clue-count">00</span>
         </div>
         <div class="clue-section">
@@ -231,6 +197,6 @@
     </footer>
   </main>
 
-  <div class="part-toast" id="part-toast" aria-hidden="true"></div>
+  <div class="part-toast" id="part-toast"></div>
 </body>
 </html>

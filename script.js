@@ -1,5 +1,3 @@
-"use strict";
-
 const WORD_BANK = [
   { answer: "CPU", clue: "Primeiro dos três blocos de um computador: busca e executa as instruções do programa. No Arduino Uno, é o núcleo do chip, a 16 MHz." },
   { answer: "ULA", clue: "Parte da CPU que faz as contas (soma, subtração) e as operações lógicas, como AND, OR, XOR e NOT. Na analogia da cozinha, é quem cozinha." },
@@ -19,7 +17,6 @@ const WORD_BANK = [
   { answer: "QUADCORE", clue: "Processador com quatro núcleos de execução no mesmo chip." }
 ];
 
-// Ordem de montagem: a N-ésima palavra certa instala a N-ésima peça.
 const CAR_PARTS = [
   { id: "chassi", name: "Chassi" },
   { id: "motor", name: "Motor" },
@@ -37,6 +34,7 @@ const CAR_PARTS = [
 
 const WORDS_PER_GAME = CAR_PARTS.length;
 const MAX_GENERATION_ATTEMPTS = 160;
+
 const elements = {
   board: document.querySelector("#crossword"),
   across: document.querySelector("#across-clues"),
@@ -51,29 +49,35 @@ const elements = {
   check: document.querySelector("#check-button"),
   reset: document.querySelector("#reset-button"),
   newGame: document.querySelector("#new-button"),
-  car: document.querySelector("#car-svg"),
+  car: document.querySelector("#car-canvas"),
   partsList: document.querySelector("#parts-list"),
   partsCount: document.querySelector("#parts-count"),
   buildFill: document.querySelector("#build-fill"),
-  buildProgress: document.querySelector("#build-progress"),
   buildBadge: document.querySelector("#build-badge"),
   toast: document.querySelector("#part-toast")
 };
 
 let currentWords = [];
-let gridData = new Map();
+let gridData = {};
 let activeWordId = null;
-let wordStates = new Map();
-let cellInputs = new Map();
+let wordStates = {};
+let cellInputs = {};
+let cellWrappers = {};
 let gridBounds = { minRow: 0, minCol: 0, rows: 0, cols: 0 };
 let installedParts = 0;
 let toastTimer = null;
+
+function formatTwoDigits(value) {
+  return value < 10 ? `0${value}` : `${value}`;
+}
 
 function shuffle(items) {
   const shuffled = [...items];
   for (let index = shuffled.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1));
-    [shuffled[index], shuffled[randomIndex]] = [shuffled[randomIndex], shuffled[index]];
+    const temp = shuffled[index];
+    shuffled[index] = shuffled[randomIndex];
+    shuffled[randomIndex] = temp;
   }
   return shuffled;
 }
@@ -83,64 +87,89 @@ function cellKey(row, col) {
 }
 
 function getWordCells(word) {
-  return Array.from(word.answer, (letter, index) => ({
-    row: word.row + (word.direction === "down" ? index : 0),
-    col: word.col + (word.direction === "across" ? index : 0),
-    letter
-  }));
+  const cells = [];
+  for (let index = 0; index < word.answer.length; index += 1) {
+    cells.push({
+      row: word.row + (word.direction === "down" ? index : 0),
+      col: word.col + (word.direction === "across" ? index : 0),
+      letter: word.answer[index]
+    });
+  }
+  return cells;
 }
 
 function getCandidatePlacements(grid, placedWords, answer) {
-  const candidates = new Map();
+  const candidates = {};
 
   for (const placedWord of placedWords) {
     const perpendicularDirection = placedWord.direction === "across" ? "down" : "across";
     for (let newIndex = 0; newIndex < answer.length; newIndex += 1) {
       for (let oldIndex = 0; oldIndex < placedWord.answer.length; oldIndex += 1) {
-        if (answer[newIndex] !== placedWord.answer[oldIndex]) continue;
+        if (answer[newIndex] !== placedWord.answer[oldIndex]) {
+          continue;
+        }
 
         const row = placedWord.row + (placedWord.direction === "down" ? oldIndex : 0) - (perpendicularDirection === "down" ? newIndex : 0);
         const col = placedWord.col + (placedWord.direction === "across" ? oldIndex : 0) - (perpendicularDirection === "across" ? newIndex : 0);
-        const candidate = { row, col, direction: perpendicularDirection, crossings: 0 };
+        const candidate = { row: row, col: col, direction: perpendicularDirection, crossings: 0 };
         let valid = true;
 
         for (let index = 0; index < answer.length; index += 1) {
           const cellRow = row + (perpendicularDirection === "down" ? index : 0);
           const cellCol = col + (perpendicularDirection === "across" ? index : 0);
           const key = cellKey(cellRow, cellCol);
-          const existingLetter = grid.get(key);
+          const existingLetter = grid[key];
+
           if (existingLetter && existingLetter !== answer[index]) {
             valid = false;
             break;
           }
+
           if (existingLetter === answer[index]) {
             candidate.crossings += 1;
           } else if (perpendicularDirection === "down") {
-            if (grid.has(cellKey(cellRow, cellCol - 1)) || grid.has(cellKey(cellRow, cellCol + 1))) valid = false;
-          } else if (grid.has(cellKey(cellRow - 1, cellCol)) || grid.has(cellKey(cellRow + 1, cellCol))) {
+            if (grid[cellKey(cellRow, cellCol - 1)] || grid[cellKey(cellRow, cellCol + 1)]) {
+              valid = false;
+            }
+          } else if (grid[cellKey(cellRow - 1, cellCol)] || grid[cellKey(cellRow + 1, cellCol)]) {
             valid = false;
           }
-          if (!valid) break;
+
+          if (!valid) {
+            break;
+          }
         }
 
         const beforeRow = row - (perpendicularDirection === "down" ? 1 : 0);
         const beforeCol = col - (perpendicularDirection === "across" ? 1 : 0);
         const afterRow = row + (perpendicularDirection === "down" ? answer.length : 0);
         const afterCol = col + (perpendicularDirection === "across" ? answer.length : 0);
-        if (grid.has(cellKey(beforeRow, beforeCol)) || grid.has(cellKey(afterRow, afterCol))) valid = false;
-        if (!valid || candidate.crossings === 0) continue;
+
+        if (grid[cellKey(beforeRow, beforeCol)] || grid[cellKey(afterRow, afterCol)]) {
+          valid = false;
+        }
+
+        if (!valid || candidate.crossings === 0) {
+          continue;
+        }
 
         const key = `${row},${col},${perpendicularDirection}`;
-        const previous = candidates.get(key);
-        if (!previous || candidate.crossings > previous.crossings) candidates.set(key, candidate);
+        const previous = candidates[key];
+        if (!previous || candidate.crossings > previous.crossings) {
+          candidates[key] = candidate;
+        }
       }
     }
   }
-  return [...candidates.values()];
+
+  return Object.values(candidates);
 }
 
 function placeWord(grid, word) {
-  for (const cell of getWordCells(word)) grid.set(cellKey(cell.row, cell.col), cell.letter);
+  const cells = getWordCells(word);
+  for (const cell of cells) {
+    grid[cellKey(cell.row, cell.col)] = cell.letter;
+  }
 }
 
 function buildRandomPuzzle() {
@@ -154,8 +183,9 @@ function buildRandomPuzzle() {
       col: 0,
       direction: "across"
     };
+
     const placedWords = [firstWord];
-    const grid = new Map();
+    const grid = {};
     placeWord(grid, firstWord);
     const remainingWords = selectedWords.slice(1);
     let failed = false;
@@ -163,8 +193,9 @@ function buildRandomPuzzle() {
     while (remainingWords.length > 0) {
       const options = [];
       remainingWords.forEach((word, wordIndex) => {
-        getCandidatePlacements(grid, placedWords, word.answer).forEach((placement) => {
-          options.push({ ...placement, wordIndex, word });
+        const placements = getCandidatePlacements(grid, placedWords, word.answer);
+        placements.forEach((placement) => {
+          options.push({ ...placement, wordIndex: wordIndex, word: word });
         });
       });
 
@@ -174,21 +205,24 @@ function buildRandomPuzzle() {
       }
 
       options.sort((first, second) => second.crossings - first.crossings);
-      const topOptions = options.slice(0, Math.min(10, options.length));
+      const topLimit = Math.min(10, options.length);
+      const topOptions = options.slice(0, topLimit);
       const selected = topOptions[Math.floor(Math.random() * topOptions.length)];
+
       const placedWord = {
         ...selected.word,
         row: selected.row,
         col: selected.col,
         direction: selected.direction
       };
+
       placeWord(grid, placedWord);
       placedWords.push(placedWord);
       remainingWords.splice(selected.wordIndex, 1);
     }
 
     if (!failed && placedWords.length === WORDS_PER_GAME) {
-      return { words: assignClueNumbers(placedWords), grid };
+      return { words: assignClueNumbers(placedWords), grid: grid };
     }
   }
 
@@ -196,40 +230,71 @@ function buildRandomPuzzle() {
 }
 
 function assignClueNumbers(words) {
-  const starts = new Map();
+  const starts = {};
   for (const word of words) {
     const key = cellKey(word.row, word.col);
-    if (!starts.has(key)) starts.set(key, {});
-    starts.get(key)[word.direction] = true;
+    if (!starts[key]) {
+      starts[key] = {};
+    }
+    starts[key][word.direction] = true;
   }
-  const orderedStarts = [...starts.keys()].map((key) => {
-    const [row, col] = key.split(",").map(Number);
-    return { key, row, col };
+
+  const orderedStarts = Object.keys(starts).map((key) => {
+    const parts = key.split(",");
+    return { key: key, row: Number(parts[0]), col: Number(parts[1]) };
   }).sort((first, second) => first.row - second.row || first.col - second.col);
 
-  const numbers = new Map();
-  orderedStarts.forEach((start, index) => numbers.set(start.key, index + 1));
+  const numbers = {};
+  orderedStarts.forEach((start, index) => {
+    numbers[start.key] = index + 1;
+  });
+
   return words.map((word, index) => ({
     ...word,
     id: `${word.direction}-${index}`,
-    number: numbers.get(cellKey(word.row, word.col))
-  })).sort((first, second) => first.number - second.number || first.direction.localeCompare(second.direction));
+    number: numbers[cellKey(word.row, word.col)]
+  })).sort((first, second) => {
+    if (first.number !== second.number) {
+      return first.number - second.number;
+    }
+    if (first.direction < second.direction) {
+      return -1;
+    }
+    if (first.direction > second.direction) {
+      return 1;
+    }
+    return 0;
+  });
 }
 
 function calculateBounds(grid) {
-  const coordinates = [...grid.keys()].map((key) => key.split(",").map(Number));
-  const rows = coordinates.map(([row]) => row);
-  const cols = coordinates.map(([, col]) => col);
+  const keys = Object.keys(grid);
+  const rows = [];
+  const cols = [];
+
+  for (const key of keys) {
+    const parts = key.split(",");
+    rows.push(Number(parts[0]));
+    cols.push(Number(parts[1]));
+  }
+
   const minRow = Math.min(...rows);
   const maxRow = Math.max(...rows);
   const minCol = Math.min(...cols);
   const maxCol = Math.max(...cols);
-  return { minRow, minCol, rows: maxRow - minRow + 1, cols: maxCol - minCol + 1 };
+
+  return {
+    minRow: minRow,
+    minCol: minCol,
+    rows: maxRow - minRow + 1,
+    cols: maxCol - minCol + 1
+  };
 }
 
 function createBoard() {
-  elements.board.replaceChildren();
-  cellInputs = new Map();
+  elements.board.innerHTML = "";
+  cellInputs = {};
+  cellWrappers = {};
   gridBounds = calculateBounds(gridData);
   elements.board.style.gridTemplateColumns = `repeat(${gridBounds.cols}, var(--cell))`;
   elements.board.style.gridTemplateRows = `repeat(${gridBounds.rows}, var(--cell))`;
@@ -239,30 +304,29 @@ function createBoard() {
       const absoluteRow = row + gridBounds.minRow;
       const absoluteCol = col + gridBounds.minCol;
       const key = cellKey(absoluteRow, absoluteCol);
+
       const cell = document.createElement("input");
       cell.className = "cell";
       cell.type = "text";
       cell.maxLength = 1;
       cell.autocomplete = "off";
-      cell.spellcheck = false;
-      cell.dataset.row = absoluteRow;
-      cell.dataset.col = absoluteCol;
-      cell.setAttribute("aria-label", `Linha ${row + 1}, coluna ${col + 1}`);
+      cell.setAttribute("data-row", String(absoluteRow));
+      cell.setAttribute("data-col", String(absoluteCol));
 
       const wrapper = document.createElement("div");
       wrapper.className = "cell-wrap";
-      if (gridData.has(key)) {
-        cell.setAttribute("aria-label", `Casa editável, linha ${row + 1}, coluna ${col + 1}`);
-        cellInputs.set(key, cell);
+
+      if (gridData[key]) {
+        cellInputs[key] = cell;
+        cellWrappers[key] = wrapper;
         cell.addEventListener("input", handleCellInput);
         cell.addEventListener("keydown", handleCellKeydown);
         cell.addEventListener("focus", () => updateActiveWordFromCell(absoluteRow, absoluteCol));
       } else {
         cell.classList.add("blocked");
-        cell.tabIndex = -1;
         cell.disabled = true;
-        cell.setAttribute("aria-hidden", "true");
       }
+
       wrapper.append(cell);
       elements.board.append(wrapper);
     }
@@ -272,27 +336,35 @@ function createBoard() {
 
 function markNumberedCells() {
   for (const word of currentWords) {
-    const startInput = cellInputs.get(cellKey(word.row, word.col));
-    if (startInput) {
-      startInput.dataset.number = word.number;
-      startInput.title = `Pista ${word.number}`;
+    const key = cellKey(word.row, word.col);
+    const startInput = cellInputs[key];
+    const startWrapper = cellWrappers[key];
+    if (startInput && startWrapper) {
+      startInput.setAttribute("data-number", String(word.number));
+      startInput.setAttribute("title", `Pista ${word.number}`);
       const numberLabel = document.createElement("span");
       numberLabel.className = "cell-number";
-      numberLabel.textContent = word.number;
-      startInput.parentElement.append(numberLabel);
+      numberLabel.textContent = String(word.number);
+      startWrapper.append(numberLabel);
     }
   }
 }
 
 function renderClues() {
-  elements.across.replaceChildren();
-  elements.down.replaceChildren();
+  elements.across.innerHTML = "";
+  elements.down.innerHTML = "";
+
   const acrossWords = currentWords.filter((word) => word.direction === "across");
   const downWords = currentWords.filter((word) => word.direction === "down");
 
-  for (const word of acrossWords) elements.across.append(createClueItem(word));
-  for (const word of downWords) elements.down.append(createClueItem(word));
-  elements.clueCount.textContent = String(currentWords.length).padStart(2, "0");
+  for (const word of acrossWords) {
+    elements.across.append(createClueItem(word));
+  }
+  for (const word of downWords) {
+    elements.down.append(createClueItem(word));
+  }
+
+  elements.clueCount.textContent = formatTwoDigits(currentWords.length);
 }
 
 function createClueItem(word) {
@@ -300,13 +372,16 @@ function createClueItem(word) {
   const button = document.createElement("button");
   button.type = "button";
   button.className = "clue-button";
-  button.dataset.wordId = word.id;
+  button.setAttribute("data-word-id", word.id);
+
   const number = document.createElement("span");
   number.className = "clue-number";
   number.textContent = `${word.number}.`;
+
   const clue = document.createElement("span");
   clue.className = "clue-text";
   clue.textContent = word.clue;
+
   button.append(number, clue);
   button.addEventListener("click", () => selectWord(word.id, true));
   item.append(button);
@@ -315,42 +390,80 @@ function createClueItem(word) {
 
 function selectWord(wordId, focusStart = false) {
   const word = currentWords.find((item) => item.id === wordId);
-  if (!word) return;
+  if (!word) {
+    return;
+  }
+
   activeWordId = wordId;
+
   document.querySelectorAll(".clue-button").forEach((button) => {
-    button.classList.toggle("active", button.dataset.wordId === wordId);
+    const btnWordId = button.getAttribute("data-word-id");
+    button.classList.toggle("active", btnWordId === wordId);
   });
+
   document.querySelectorAll(".cell").forEach((cell) => {
     cell.classList.remove("active-word", "active-start");
   });
+
   const cells = getWordCells(word);
   cells.forEach((cell, index) => {
-    const input = cellInputs.get(cellKey(cell.row, cell.col));
+    const input = cellInputs[cellKey(cell.row, cell.col)];
     if (input) {
       input.classList.add("active-word");
-      if (index === 0) input.classList.add("active-start");
+      if (index === 0) {
+        input.classList.add("active-start");
+      }
     }
   });
+
   if (focusStart) {
-    const firstEmpty = cells.find((cell) => !cellInputs.get(cellKey(cell.row, cell.col)).value);
+    const firstEmpty = cells.find((cell) => {
+      const inp = cellInputs[cellKey(cell.row, cell.col)];
+      return inp && !inp.value;
+    });
     const target = firstEmpty || cells[0];
-    cellInputs.get(cellKey(target.row, target.col))?.focus();
+    const targetInput = cellInputs[cellKey(target.row, target.col)];
+    if (targetInput) {
+      targetInput.focus();
+    }
   }
 }
 
 function updateActiveWordFromCell(row, col) {
-  const matchingWords = currentWords.filter((word) => getWordCells(word).some((cell) => cell.row === row && cell.col === col));
-  if (matchingWords.length === 0) return;
+  const matchingWords = currentWords.filter((word) =>
+    getWordCells(word).some((cell) => cell.row === row && cell.col === col)
+  );
+  if (matchingWords.length === 0) {
+    return;
+  }
   const preferredWord = matchingWords.find((word) => word.id === activeWordId) || matchingWords[0];
   selectWord(preferredWord.id, false);
 }
 
+function sanitizeLetter(raw) {
+  const upper = raw.toUpperCase();
+  const lastChar = upper.slice(-1);
+  const accentMap = {
+    "Á": "A", "À": "A", "Ã": "A", "Â": "A",
+    "É": "E", "Ê": "E",
+    "Í": "I",
+    "Ó": "O", "Õ": "O", "Ô": "O",
+    "Ú": "U",
+    "Ç": "C"
+  };
+  const mapped = accentMap[lastChar] || lastChar;
+  return mapped >= "A" && mapped <= "Z" ? mapped : "";
+}
+
 function handleCellInput(event) {
   const input = event.currentTarget;
-  const cleanValue = input.value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z]/gi, "").toUpperCase().slice(-1);
+  const cleanValue = sanitizeLetter(input.value);
   input.value = cleanValue;
   input.classList.remove("correct", "incorrect");
-  if (cleanValue) focusNextCell(input, 1);
+
+  if (cleanValue) {
+    focusNextCell(input, 1);
+  }
   updateScorePreview();
 }
 
@@ -370,33 +483,53 @@ function handleCellKeydown(event) {
 
 function focusNextCell(input, offset) {
   const word = currentWords.find((item) => item.id === activeWordId);
-  if (!word) return;
+  if (!word) {
+    return;
+  }
   const cells = getWordCells(word);
-  const currentIndex = cells.findIndex((cell) => cell.row === Number(input.dataset.row) && cell.col === Number(input.dataset.col));
+  const rowAttr = Number(input.getAttribute("data-row"));
+  const colAttr = Number(input.getAttribute("data-col"));
+  const currentIndex = cells.findIndex((cell) => cell.row === rowAttr && cell.col === colAttr);
   const nextCell = cells[currentIndex + offset];
-  if (nextCell) cellInputs.get(cellKey(nextCell.row, nextCell.col))?.focus();
+
+  if (nextCell) {
+    const nextInput = cellInputs[cellKey(nextCell.row, nextCell.col)];
+    if (nextInput) {
+      nextInput.focus();
+    }
+  }
 }
 
 function getWordValue(word) {
-  return getWordCells(word).map((cell) => cellInputs.get(cellKey(cell.row, cell.col))?.value || "").join("");
+  const cells = getWordCells(word);
+  const letters = cells.map((cell) => {
+    const input = cellInputs[cellKey(cell.row, cell.col)];
+    return input ? input.value : "";
+  });
+  return letters.join("");
 }
 
 function checkAnswers() {
   let correctCount = 0;
-  wordStates = new Map();
+  wordStates = {};
+
   for (const word of currentWords) {
     const value = getWordValue(word);
     const isComplete = value.length === word.answer.length;
     const isCorrect = isComplete && value === word.answer;
-    wordStates.set(word.id, { isComplete, isCorrect });
-    if (isCorrect) correctCount += 1;
+    wordStates[word.id] = { isComplete: isComplete, isCorrect: isCorrect };
+    if (isCorrect) {
+      correctCount += 1;
+    }
   }
 
   updateCellStates();
   updateClueStates();
   elements.score.textContent = `${correctCount} / ${currentWords.length}`;
+
   const newParts = updateGarage(correctCount, { announce: true });
   const installedNames = newParts.map((part) => part.name).join(", ");
+
   if (correctCount === currentWords.length) {
     elements.status.textContent = "Concluído";
     elements.status.style.color = "var(--green)";
@@ -411,19 +544,27 @@ function checkAnswers() {
 }
 
 function updateCellStates() {
-  for (const [key, input] of cellInputs) {
+  const entries = Object.entries(cellInputs);
+  for (const [key, input] of entries) {
     input.classList.remove("correct", "incorrect");
-    const relatedWords = currentWords.filter((word) => getWordCells(word).some((cell) => cellKey(cell.row, cell.col) === key));
-    const relatedStates = relatedWords.map((word) => wordStates.get(word.id));
-    if (relatedStates.some((state) => state?.isComplete && !state.isCorrect)) input.classList.add("incorrect");
-    else if (relatedStates.length > 0 && relatedStates.every((state) => state?.isCorrect)) input.classList.add("correct");
+    const relatedWords = currentWords.filter((word) =>
+      getWordCells(word).some((cell) => cellKey(cell.row, cell.col) === key)
+    );
+    const relatedStates = relatedWords.map((word) => wordStates[word.id]);
+
+    if (relatedStates.some((state) => state && state.isComplete && !state.isCorrect)) {
+      input.classList.add("incorrect");
+    } else if (relatedStates.length > 0 && relatedStates.every((state) => state && state.isCorrect)) {
+      input.classList.add("correct");
+    }
   }
 }
 
 function updateClueStates() {
   document.querySelectorAll(".clue-button").forEach((button) => {
-    const state = wordStates.get(button.dataset.wordId);
-    button.classList.toggle("solved", Boolean(state?.isCorrect));
+    const wordId = button.getAttribute("data-word-id");
+    const state = wordStates[wordId];
+    button.classList.toggle("solved", Boolean(state && state.isCorrect));
   });
 }
 
@@ -434,40 +575,50 @@ function updateScorePreview() {
 }
 
 function resetBoard() {
-  for (const input of cellInputs.values()) {
+  const inputs = Object.values(cellInputs);
+  for (const input of inputs) {
     input.value = "";
     input.classList.remove("correct", "incorrect");
   }
-  wordStates.clear();
+  wordStates = {};
   document.querySelectorAll(".clue-button").forEach((button) => button.classList.remove("solved"));
   elements.score.textContent = `0 / ${currentWords.length}`;
   elements.status.textContent = "Aguardando";
   elements.status.style.color = "";
   elements.feedback.textContent = "Tabuleiro limpo e carro desmontado. Boa sorte!";
   updateGarage(0);
-  if (activeWordId) selectWord(activeWordId, false);
-}
-
-function renderPartsList() {
-  elements.partsList.replaceChildren();
-  for (const part of CAR_PARTS) {
-    const item = document.createElement("li");
-    item.dataset.part = part.id;
-    const name = document.createElement("span");
-    name.className = "part-name";
-    name.textContent = part.name;
-    const state = document.createElement("span");
-    state.className = "part-state";
-    state.setAttribute("aria-hidden", "true");
-    const hidden = document.createElement("span");
-    hidden.className = "sr-only";
-    item.append(name, state, hidden);
-    elements.partsList.append(item);
+  if (activeWordId) {
+    selectWord(activeWordId, false);
   }
 }
 
+function renderPartsList() {
+  elements.partsList.innerHTML = "";
+  CAR_PARTS.forEach((part, index) => {
+    const item = document.createElement("li");
+    item.setAttribute("data-part", part.id);
+
+    const num = document.createElement("span");
+    num.className = "part-index";
+    num.textContent = formatTwoDigits(index + 1);
+
+    const name = document.createElement("span");
+    name.className = "part-name";
+    name.textContent = part.name;
+
+    const state = document.createElement("span");
+    state.className = "part-state";
+
+    const hidden = document.createElement("span");
+    hidden.className = "sr-only";
+
+    item.append(num, name, state, hidden);
+    elements.partsList.append(item);
+  });
+}
+
 function showToast(title, detail) {
-  elements.toast.replaceChildren();
+  elements.toast.innerHTML = "";
   const strong = document.createElement("strong");
   strong.textContent = title;
   const span = document.createElement("span");
@@ -478,7 +629,6 @@ function showToast(title, detail) {
   toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2800);
 }
 
-// Instala as primeiras `count` peças. Devolve as peças recém-instaladas.
 function updateGarage(count, { announce = false } = {}) {
   const previous = installedParts;
   installedParts = count;
@@ -486,31 +636,36 @@ function updateGarage(count, { announce = false } = {}) {
 
   CAR_PARTS.forEach((part, index) => {
     const installed = index < count;
-    const group = elements.car.querySelector(`.part[data-part="${part.id}"]`);
+    const group = elements.car.querySelector(`.car-part[data-part="${part.id}"]`);
     const item = elements.partsList.querySelector(`li[data-part="${part.id}"]`);
+
     if (group) {
       group.classList.toggle("installed", installed);
       group.classList.toggle("locked", !installed);
       group.classList.remove("fresh");
       if (installed && index >= previous && announce) {
-        void group.getBoundingClientRect();
-        group.classList.add("fresh");
+        setTimeout(() => {
+          group.classList.add("fresh");
+        }, 10);
         setTimeout(() => group.classList.remove("fresh"), 1000);
       }
     }
+
     if (item) {
       item.classList.toggle("installed", installed);
       item.querySelector(".part-state").textContent = installed ? "✓" : "";
       item.querySelector(".sr-only").textContent = installed ? "instalada" : "bloqueada";
     }
-    if (installed && index >= previous) newParts.push(part);
+
+    if (installed && index >= previous) {
+      newParts.push(part);
+    }
   });
 
   const total = CAR_PARTS.length;
   elements.car.classList.toggle("painted", count >= total);
   elements.partsCount.textContent = `${count} / ${total}`;
   elements.buildFill.style.width = `${(count / total) * 100}%`;
-  elements.buildProgress.setAttribute("aria-valuenow", String(count));
   elements.buildBadge.textContent = count === 0 ? "Garagem vazia" : count >= total ? "Pronto para a estrada" : "Em montagem";
   elements.buildBadge.classList.toggle("building", count > 0 && count < total);
   elements.buildBadge.classList.toggle("done", count >= total);
@@ -525,6 +680,7 @@ function updateGarage(count, { announce = false } = {}) {
   } else if (newParts.length > 1) {
     showToast(`${newParts.length} peças instaladas`, newParts.map((part) => part.name).join(", "));
   }
+
   return newParts;
 }
 
@@ -533,15 +689,18 @@ function startNewGame() {
     const puzzle = buildRandomPuzzle();
     currentWords = puzzle.words;
     gridData = puzzle.grid;
-    wordStates = new Map();
+    wordStates = {};
     activeWordId = null;
+
     createBoard();
     renderClues();
-    elements.total.textContent = String(currentWords.length).padStart(2, "0");
+
+    elements.total.textContent = formatTwoDigits(currentWords.length);
     elements.score.textContent = `0 / ${currentWords.length}`;
     elements.status.textContent = "Aguardando";
     elements.status.style.color = "";
     elements.feedback.textContent = "Nova grade gerada. Escolha uma pista para começar.";
+
     updateGarage(0);
     const firstWord = currentWords.find((word) => word.direction === "across") || currentWords[0];
     selectWord(firstWord.id, false);
