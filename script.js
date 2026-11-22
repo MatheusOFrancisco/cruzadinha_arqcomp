@@ -1,22 +1,22 @@
 "use strict";
 
 const WORD_BANK = [
-  { answer: "CPU", clue: "Executa instruções e coordena operações fundamentais do computador." },
-  { answer: "ULA", clue: "Realiza cálculos aritméticos e operações lógicas dentro do processador." },
-  { answer: "UC", clue: "Orienta a ordem das etapas para que cada comando seja realizado corretamente." },
-  { answer: "REGISTRADORES", clue: "Pequenas áreas internas que guardam temporariamente valores usados pelo processador." },
-  { answer: "RAM", clue: "Armazenamento temporário utilizado por aplicativos enquanto estão em execução." },
-  { answer: "ROM", clue: "Guarda instruções permanentes, preservadas mesmo quando falta energia." },
-  { answer: "EEPROM", clue: "Componente não volátil cujos conteúdos podem ser apagados e regravados eletricamente." },
-  { answer: "FLASH", clue: "Tecnologia não volátil que permite apagar e gravar informações em blocos." },
-  { answer: "CACHE", clue: "Mantém cópias de informações frequentes para reduzir o tempo de acesso." },
-  { answer: "MEMORIADEMASSA", clue: "Guarda arquivos por longos períodos, mesmo após o desligamento do equipamento." },
-  { answer: "DMA", clue: "Permite que periféricos transfiram informações sem depender continuamente do processador." },
-  { answer: "ADDRESSBUS", clue: "Conjunto de linhas que indica a localização usada numa operação." },
-  { answer: "DATABUS", clue: "Canal que transporta valores entre componentes durante o funcionamento do sistema." },
-  { answer: "MICROCONTROLADOR", clue: "Circuito integrado que reúne processamento, armazenamento e interfaces para tarefas específicas." },
-  { answer: "DUALCORE", clue: "Arquitetura de processador que possui duas unidades de execução." },
-  { answer: "QUADCORE", clue: "Arquitetura de processador que possui quatro unidades de execução." }
+  { answer: "CPU", clue: "Primeiro dos três blocos de um computador: busca e executa as instruções do programa. No Arduino Uno, é o núcleo do chip, a 16 MHz." },
+  { answer: "ULA", clue: "Parte da CPU que faz as contas (soma, subtração) e as operações lógicas, como AND, OR, XOR e NOT. Na analogia da cozinha, é quem cozinha." },
+  { answer: "UC", clue: "Parte da CPU que lê cada instrução, descobre o que ela pede e envia as ordens para as outras partes. Na analogia da cozinha, é o chef." },
+  { answer: "REGISTRADORES", clue: "Memórias minúsculas dentro da CPU, as mais rápidas do computador, que guardam o dado que está sendo usado agora. O acumulador e o PC são exemplos." },
+  { answer: "RAM", clue: "Memória de trabalho e volátil: guarda os programas em execução e seus dados. No Arduino Uno tem 2 KB e guarda as variáveis." },
+  { answer: "ROM", clue: "Memória não volátil que guarda o firmware de inicialização, como a BIOS ou a UEFI. Hoje, esse papel quase sempre é feito por memória Flash." },
+  { answer: "EEPROM", clue: "Memória não volátil de 1 KB do Arduino Uno, onde o próprio programa pode guardar dados, como uma configuração, que sobrevivem ao desligamento." },
+  { answer: "FLASH", clue: "Memória não volátil e regravável, da mesma tecnologia do pendrive. No Arduino Uno, tem 32 KB e guarda o programa." },
+  { answer: "CACHE", clue: "Memória pequena e muito rápida dentro do processador, que guarda cópia do que a CPU usou há pouco. O ATmega328P do Arduino Uno não tem." },
+  { answer: "MEMORIADEMASSA", clue: "Nível de baixo da hierarquia de memória (SSD ou HD): não volátil, guarda arquivos e programas instalados de forma permanente." },
+  { answer: "DMA", clue: "Recurso em que um controlador copia dados entre um dispositivo e a RAM sem a CPU mover cada byte. O Arduino Uno do kit não tem." },
+  { answer: "ADDRESSBUS", clue: "Barramento que responde à pergunta \"onde?\": sai da CPU com o número da posição de memória a acessar. Com 16 fios, alcança 65.536 posições." },
+  { answer: "DATABUS", clue: "Barramento que responde à pergunta \"o quê?\": vai e volta com o valor lido ou escrito, e também leva as instruções até a CPU." },
+  { answer: "MICROCONTROLADOR", clue: "Chip que reúne CPU, memória e entrada e saída, feito para uma tarefa específica. O ATmega328P, do Arduino Uno, é um." },
+  { answer: "DUALCORE", clue: "Processador com dois núcleos de execução no mesmo chip." },
+  { answer: "QUADCORE", clue: "Processador com quatro núcleos de execução no mesmo chip." }
 ];
 
 // Ordem de montagem: a N-ésima palavra certa instala a N-ésima peça.

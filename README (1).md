@@ -47,26 +47,26 @@ Se uma palavra deixar de estar correta e o jogador conferir de novo, a peça mai
 
 A cada partida, o jogo seleciona 12 dos 16 termos da atividade e tenta montar uma grade conectada. As respostas usam letras maiúsculas, sem acentos e sem espaços.
 
-| Termo | Pista provisória |
+| Termo | Pista |
 |---|---|
-| CPU | Executa instruções e coordena operações fundamentais do computador. |
-| ULA | Realiza cálculos aritméticos e operações lógicas dentro do processador. |
-| UC | Orienta a ordem das etapas para que cada comando seja realizado corretamente. |
-| REGISTRADORES | Pequenas áreas internas que guardam temporariamente valores usados pelo processador. |
-| RAM | Armazenamento temporário utilizado por aplicativos enquanto estão em execução. |
-| ROM | Guarda instruções permanentes, preservadas mesmo quando falta energia. |
-| EEPROM | Componente não volátil cujos conteúdos podem ser apagados e regravados eletricamente. |
-| FLASH | Tecnologia não volátil que permite apagar e gravar informações em blocos. |
-| CACHE | Mantém cópias de informações frequentes para reduzir o tempo de acesso. |
-| MEMORIADEMASSA | Guarda arquivos por longos períodos, mesmo após o desligamento do equipamento. |
-| DMA | Permite que periféricos transfiram informações sem depender continuamente do processador. |
-| ADDRESSBUS | Conjunto de linhas que indica a localização usada numa operação. |
-| DATABUS | Canal que transporta valores entre componentes durante o funcionamento do sistema. |
-| MICROCONTROLADOR | Circuito integrado que reúne processamento, armazenamento e interfaces para tarefas específicas. |
-| DUALCORE | Arquitetura de processador que possui duas unidades de execução. |
-| QUADCORE | Arquitetura de processador que possui quatro unidades de execução. |
+| CPU | Primeiro dos três blocos de um computador: busca e executa as instruções do programa. No Arduino Uno, é o núcleo do chip, a 16 MHz. |
+| ULA | Parte da CPU que faz as contas (soma, subtração) e as operações lógicas, como AND, OR, XOR e NOT. Na analogia da cozinha, é quem cozinha. |
+| UC | Parte da CPU que lê cada instrução, descobre o que ela pede e envia as ordens para as outras partes. Na analogia da cozinha, é o chef. |
+| REGISTRADORES | Memórias minúsculas dentro da CPU, as mais rápidas do computador, que guardam o dado que está sendo usado agora. O acumulador e o PC são exemplos. |
+| RAM | Memória de trabalho e volátil: guarda os programas em execução e seus dados. No Arduino Uno tem 2 KB e guarda as variáveis. |
+| ROM | Memória não volátil que guarda o firmware de inicialização, como a BIOS ou a UEFI. Hoje, esse papel quase sempre é feito por memória Flash. |
+| EEPROM | Memória não volátil de 1 KB do Arduino Uno, onde o próprio programa pode guardar dados, como uma configuração, que sobrevivem ao desligamento. |
+| FLASH | Memória não volátil e regravável, da mesma tecnologia do pendrive. No Arduino Uno, tem 32 KB e guarda o programa. |
+| CACHE | Memória pequena e muito rápida dentro do processador, que guarda cópia do que a CPU usou há pouco. O ATmega328P do Arduino Uno não tem. |
+| MEMORIADEMASSA | Nível de baixo da hierarquia de memória (SSD ou HD): não volátil, guarda arquivos e programas instalados de forma permanente. |
+| DMA | Recurso em que um controlador copia dados entre um dispositivo e a RAM sem a CPU mover cada byte. O Arduino Uno do kit não tem. |
+| ADDRESSBUS | Barramento que responde à pergunta "onde?": sai da CPU com o número da posição de memória a acessar. Com 16 fios, alcança 65.536 posições. |
+| DATABUS | Barramento que responde à pergunta "o quê?": vai e volta com o valor lido ou escrito, e também leva as instruções até a CPU. |
+| MICROCONTROLADOR | Chip que reúne CPU, memória e entrada e saída, feito para uma tarefa específica. O ATmega328P, do Arduino Uno, é um. |
+| DUALCORE | Processador com dois núcleos de execução no mesmo chip. |
+| QUADCORE | Processador com quatro núcleos de execução no mesmo chip. |
 
-> **Importante:** as pistas acima são provisórias e foram elaboradas com conhecimentos gerais. O e-book indicado na atividade não foi disponibilizado; portanto, ainda não é possível confirmar que cada definição corresponde exatamente ao material da disciplina. Revise as pistas com o e-book antes da entrega, se conseguir acesso a ele. As pistas também devem ser conferidas quanto à regra de não revelar a resposta ou parte dela.
+> **Importante:** as pistas foram reescritas com base no e-book *Tópicos de Arquitetura Computacional* (SPTech). Os termos DUALCORE, QUADCORE, ADDRESSBUS, DATABUS e MEMORIADEMASSA não aparecem com esses nomes no livro: ele fala em "barramento de endereço", "barramento de dados" e "armazenamento", e não trata de processadores multinúcleo. As pistas desses termos seguem o conceito do livro (ou conhecimento geral, no caso de DUALCORE e QUADCORE) e valem uma revisão.
 
 ## Estrutura de arquivos
 
