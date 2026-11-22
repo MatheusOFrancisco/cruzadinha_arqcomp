@@ -39,6 +39,7 @@ const elements = {
   board: document.querySelector("#crossword"),
   across: document.querySelector("#across-clues"),
   down: document.querySelector("#down-clues"),
+  cluesScroll: document.querySelector(".clues-scroll-area"),
   nickname: document.querySelector("#nickname"),
   player: document.querySelector("#player-display"),
   total: document.querySelector("#word-total"),
@@ -54,7 +55,12 @@ const elements = {
   partsCount: document.querySelector("#parts-count"),
   buildFill: document.querySelector("#build-fill"),
   buildBadge: document.querySelector("#build-badge"),
-  toast: document.querySelector("#part-toast")
+  toast: document.querySelector("#part-toast"),
+  activeClueBadge: document.querySelector("#active-clue-badge"),
+  activeClueLength: document.querySelector("#active-clue-length"),
+  activeClueText: document.querySelector("#active-clue-text"),
+  prevClueBtn: document.querySelector("#prev-clue-btn"),
+  nextClueBtn: document.querySelector("#next-clue-btn")
 };
 
 let currentWords = [];
@@ -374,15 +380,24 @@ function createClueItem(word) {
   button.className = "clue-button";
   button.setAttribute("data-word-id", word.id);
 
+  const header = document.createElement("div");
+  header.className = "clue-header";
+
   const number = document.createElement("span");
   number.className = "clue-number";
-  number.textContent = `${word.number}.`;
+  number.textContent = `PISTA ${formatTwoDigits(word.number)}`;
+
+  const lengthTag = document.createElement("span");
+  lengthTag.className = "clue-meta-tag";
+  lengthTag.textContent = `${word.answer.length} letras`;
+
+  header.append(number, lengthTag);
 
   const clue = document.createElement("span");
   clue.className = "clue-text";
   clue.textContent = word.clue;
 
-  button.append(number, clue);
+  button.append(header, clue);
   button.addEventListener("click", () => selectWord(word.id, true));
   item.append(button);
   return item;
@@ -396,10 +411,24 @@ function selectWord(wordId, focusStart = false) {
 
   activeWordId = wordId;
 
+  const dirLabel = word.direction === "across" ? "→ HORIZONTAL" : "↓ VERTICAL";
+  elements.activeClueBadge.textContent = `${formatTwoDigits(word.number)} ${dirLabel}`;
+  elements.activeClueLength.textContent = `${word.answer.length} letras`;
+  elements.activeClueText.textContent = word.clue;
+
+  let activeButton = null;
   document.querySelectorAll(".clue-button").forEach((button) => {
     const btnWordId = button.getAttribute("data-word-id");
-    button.classList.toggle("active", btnWordId === wordId);
+    const isMatch = btnWordId === wordId;
+    button.classList.toggle("active", isMatch);
+    if (isMatch) {
+      activeButton = button;
+    }
   });
+
+  if (activeButton && elements.cluesScroll) {
+    elements.cluesScroll.scrollTop = activeButton.offsetTop - elements.cluesScroll.offsetTop - 24;
+  }
 
   document.querySelectorAll(".cell").forEach((cell) => {
     cell.classList.remove("active-word", "active-start");
@@ -544,8 +573,9 @@ function checkAnswers() {
 }
 
 function updateCellStates() {
-  const entries = Object.entries(cellInputs);
-  for (const [key, input] of entries) {
+  const keys = Object.keys(cellInputs);
+  for (const key of keys) {
+    const input = cellInputs[key];
     input.classList.remove("correct", "incorrect");
     const relatedWords = currentWords.filter((word) =>
       getWordCells(word).some((cell) => cellKey(cell.row, cell.col) === key)
@@ -684,6 +714,19 @@ function updateGarage(count, { announce = false } = {}) {
   return newParts;
 }
 
+function navigateClue(step) {
+  if (currentWords.length === 0) {
+    return;
+  }
+  const orderedWords = [
+    ...currentWords.filter((word) => word.direction === "across"),
+    ...currentWords.filter((word) => word.direction === "down")
+  ];
+  const currentIndex = orderedWords.findIndex((word) => word.id === activeWordId);
+  const nextIndex = (currentIndex + step + orderedWords.length) % orderedWords.length;
+  selectWord(orderedWords[nextIndex].id, true);
+}
+
 function startNewGame() {
   try {
     const puzzle = buildRandomPuzzle();
@@ -719,6 +762,8 @@ elements.check.addEventListener("click", checkAnswers);
 elements.reset.addEventListener("click", resetBoard);
 elements.newGame.addEventListener("click", startNewGame);
 elements.nickname.addEventListener("input", updatePlayerName);
+elements.prevClueBtn.addEventListener("click", () => navigateClue(-1));
+elements.nextClueBtn.addEventListener("click", () => navigateClue(1));
 
 renderPartsList();
 startNewGame();

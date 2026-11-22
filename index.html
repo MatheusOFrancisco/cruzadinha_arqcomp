@@ -58,6 +58,20 @@
             <p class="panel-sub">Digite nas casas. Cruzamentos dividem a mesma letra.</p>
           </div>
         </div>
+
+        <!-- Faixa da pista selecionada -->
+        <div id="active-clue-banner" class="active-clue-banner">
+          <div class="active-clue-meta">
+            <span id="active-clue-badge" class="active-clue-badge">01 → HORIZONTAL</span>
+            <span id="active-clue-length" class="active-clue-length">0 letras</span>
+          </div>
+          <p id="active-clue-text" class="active-clue-text">Selecione uma pista ou casa para começar.</p>
+          <div class="active-clue-nav">
+            <button id="prev-clue-btn" type="button" class="clue-nav-btn" title="Pista anterior">‹ Anterior</button>
+            <button id="next-clue-btn" type="button" class="clue-nav-btn" title="Próxima pista">Próxima ›</button>
+          </div>
+        </div>
+
         <div class="board-viewport">
           <div id="crossword" class="crossword"></div>
         </div>
@@ -181,13 +195,15 @@
           </div>
           <span class="clue-count" id="clue-count">00</span>
         </div>
-        <div class="clue-section">
-          <h3><span class="direction-icon">→</span> Horizontais</h3>
-          <ol id="across-clues" class="clue-list"></ol>
-        </div>
-        <div class="clue-section">
-          <h3><span class="direction-icon vertical-icon">↓</span> Verticais</h3>
-          <ol id="down-clues" class="clue-list"></ol>
+        <div class="clues-scroll-area">
+          <div class="clue-section">
+            <h3><span class="direction-icon">→</span> Horizontais</h3>
+            <ol id="across-clues" class="clue-list"></ol>
+          </div>
+          <div class="clue-section">
+            <h3><span class="direction-icon vertical-icon">↓</span> Verticais</h3>
+            <ol id="down-clues" class="clue-list"></ol>
+          </div>
         </div>
       </aside>
     </section>
