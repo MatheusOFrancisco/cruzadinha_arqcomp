@@ -19,7 +19,23 @@ const WORD_BANK = [
   { answer: "QUADCORE", clue: "Arquitetura de processador que possui quatro unidades de execução." }
 ];
 
-const WORDS_PER_GAME = 12;
+// Ordem de montagem: a N-ésima palavra certa instala a N-ésima peça.
+const CAR_PARTS = [
+  { id: "chassi", name: "Chassi" },
+  { id: "motor", name: "Motor" },
+  { id: "escapamento", name: "Escapamento" },
+  { id: "roda-traseira", name: "Roda traseira" },
+  { id: "roda-dianteira", name: "Roda dianteira" },
+  { id: "carroceria", name: "Carroceria" },
+  { id: "cabine", name: "Cabine" },
+  { id: "vidros", name: "Vidros" },
+  { id: "farois", name: "Faróis" },
+  { id: "lanternas", name: "Lanternas" },
+  { id: "aerofolio", name: "Aerofólio" },
+  { id: "pintura", name: "Pintura" }
+];
+
+const WORDS_PER_GAME = CAR_PARTS.length;
 const MAX_GENERATION_ATTEMPTS = 160;
 const elements = {
   board: document.querySelector("#crossword"),
@@ -34,7 +50,14 @@ const elements = {
   clueCount: document.querySelector("#clue-count"),
   check: document.querySelector("#check-button"),
   reset: document.querySelector("#reset-button"),
-  newGame: document.querySelector("#new-button")
+  newGame: document.querySelector("#new-button"),
+  car: document.querySelector("#car-svg"),
+  partsList: document.querySelector("#parts-list"),
+  partsCount: document.querySelector("#parts-count"),
+  buildFill: document.querySelector("#build-fill"),
+  buildProgress: document.querySelector("#build-progress"),
+  buildBadge: document.querySelector("#build-badge"),
+  toast: document.querySelector("#part-toast")
 };
 
 let currentWords = [];
@@ -43,6 +66,8 @@ let activeWordId = null;
 let wordStates = new Map();
 let cellInputs = new Map();
 let gridBounds = { minRow: 0, minCol: 0, rows: 0, cols: 0 };
+let installedParts = 0;
+let toastTimer = null;
 
 function shuffle(items) {
   const shuffled = [...items];
@@ -370,14 +395,18 @@ function checkAnswers() {
   updateCellStates();
   updateClueStates();
   elements.score.textContent = `${correctCount} / ${currentWords.length}`;
+  const newParts = updateGarage(correctCount, { announce: true });
+  const installedNames = newParts.map((part) => part.name).join(", ");
   if (correctCount === currentWords.length) {
-    elements.status.textContent = "CONCLUÍDO";
+    elements.status.textContent = "Concluído";
     elements.status.style.color = "var(--green)";
-    elements.feedback.textContent = "★ PARABÉNS! VOCÊ COMPLETOU TODAS AS PALAVRAS.";
+    elements.feedback.textContent = "Parabéns! Você completou todas as palavras e o carro está pronto para a estrada.";
   } else {
-    elements.status.textContent = "EM ANDAMENTO";
+    elements.status.textContent = "Em andamento";
     elements.status.style.color = "var(--yellow)";
-    elements.feedback.textContent = `${correctCount} DE ${currentWords.length} PALAVRAS CORRETAS. CONTINUE TENTANDO!`;
+    elements.feedback.textContent = newParts.length > 0
+      ? `Peça instalada: ${installedNames}. ${correctCount} de ${currentWords.length} palavras corretas.`
+      : `${correctCount} de ${currentWords.length} palavras corretas. Continue tentando!`;
   }
 }
 
@@ -400,7 +429,7 @@ function updateClueStates() {
 
 function updateScorePreview() {
   const filled = currentWords.filter((word) => getWordValue(word).length === word.answer.length).length;
-  elements.status.textContent = filled > 0 ? "EM ANDAMENTO" : "AGUARDANDO";
+  elements.status.textContent = filled > 0 ? "Em andamento" : "Aguardando";
   elements.status.style.color = filled > 0 ? "var(--yellow)" : "";
 }
 
@@ -412,10 +441,91 @@ function resetBoard() {
   wordStates.clear();
   document.querySelectorAll(".clue-button").forEach((button) => button.classList.remove("solved"));
   elements.score.textContent = `0 / ${currentWords.length}`;
-  elements.status.textContent = "AGUARDANDO";
+  elements.status.textContent = "Aguardando";
   elements.status.style.color = "";
-  elements.feedback.textContent = "TABULEIRO LIMPO. BOA SORTE!";
+  elements.feedback.textContent = "Tabuleiro limpo e carro desmontado. Boa sorte!";
+  updateGarage(0);
   if (activeWordId) selectWord(activeWordId, false);
+}
+
+function renderPartsList() {
+  elements.partsList.replaceChildren();
+  for (const part of CAR_PARTS) {
+    const item = document.createElement("li");
+    item.dataset.part = part.id;
+    const name = document.createElement("span");
+    name.className = "part-name";
+    name.textContent = part.name;
+    const state = document.createElement("span");
+    state.className = "part-state";
+    state.setAttribute("aria-hidden", "true");
+    const hidden = document.createElement("span");
+    hidden.className = "sr-only";
+    item.append(name, state, hidden);
+    elements.partsList.append(item);
+  }
+}
+
+function showToast(title, detail) {
+  elements.toast.replaceChildren();
+  const strong = document.createElement("strong");
+  strong.textContent = title;
+  const span = document.createElement("span");
+  span.textContent = detail;
+  elements.toast.append(strong, span);
+  elements.toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => elements.toast.classList.remove("show"), 2800);
+}
+
+// Instala as primeiras `count` peças. Devolve as peças recém-instaladas.
+function updateGarage(count, { announce = false } = {}) {
+  const previous = installedParts;
+  installedParts = count;
+  const newParts = [];
+
+  CAR_PARTS.forEach((part, index) => {
+    const installed = index < count;
+    const group = elements.car.querySelector(`.part[data-part="${part.id}"]`);
+    const item = elements.partsList.querySelector(`li[data-part="${part.id}"]`);
+    if (group) {
+      group.classList.toggle("installed", installed);
+      group.classList.toggle("locked", !installed);
+      group.classList.remove("fresh");
+      if (installed && index >= previous && announce) {
+        void group.getBoundingClientRect();
+        group.classList.add("fresh");
+        setTimeout(() => group.classList.remove("fresh"), 1000);
+      }
+    }
+    if (item) {
+      item.classList.toggle("installed", installed);
+      item.querySelector(".part-state").textContent = installed ? "✓" : "";
+      item.querySelector(".sr-only").textContent = installed ? "instalada" : "bloqueada";
+    }
+    if (installed && index >= previous) newParts.push(part);
+  });
+
+  const total = CAR_PARTS.length;
+  elements.car.classList.toggle("painted", count >= total);
+  elements.partsCount.textContent = `${count} / ${total}`;
+  elements.buildFill.style.width = `${(count / total) * 100}%`;
+  elements.buildProgress.setAttribute("aria-valuenow", String(count));
+  elements.buildBadge.textContent = count === 0 ? "Garagem vazia" : count >= total ? "Pronto para a estrada" : "Em montagem";
+  elements.buildBadge.classList.toggle("building", count > 0 && count < total);
+  elements.buildBadge.classList.toggle("done", count >= total);
+
+  if (!announce) {
+    clearTimeout(toastTimer);
+    elements.toast.classList.remove("show");
+  } else if (count >= total && newParts.length > 0) {
+    showToast("Carro completo!", "Pintura aplicada. Pé na estrada.");
+  } else if (newParts.length === 1) {
+    showToast("Peça instalada", newParts[0].name);
+  } else if (newParts.length > 1) {
+    showToast(`${newParts.length} peças instaladas`, newParts.map((part) => part.name).join(", "));
+  }
+  return newParts;
 }
 
 function startNewGame() {
@@ -429,20 +539,21 @@ function startNewGame() {
     renderClues();
     elements.total.textContent = String(currentWords.length).padStart(2, "0");
     elements.score.textContent = `0 / ${currentWords.length}`;
-    elements.status.textContent = "AGUARDANDO";
+    elements.status.textContent = "Aguardando";
     elements.status.style.color = "";
-    elements.feedback.textContent = "NOVA GRADE GERADA. ESCOLHA UMA PISTA PARA COMEÇAR.";
+    elements.feedback.textContent = "Nova grade gerada. Escolha uma pista para começar.";
+    updateGarage(0);
     const firstWord = currentWords.find((word) => word.direction === "across") || currentWords[0];
     selectWord(firstWord.id, false);
   } catch (error) {
-    elements.feedback.textContent = "NÃO FOI POSSÍVEL GERAR A GRADE. ATUALIZE A PÁGINA.";
+    elements.feedback.textContent = "Não foi possível gerar a grade. Atualize a página.";
     console.error(error);
   }
 }
 
 function updatePlayerName() {
   const nickname = elements.nickname.value.trim().toUpperCase();
-  elements.player.textContent = nickname || "PLAYER 1";
+  elements.player.textContent = nickname || "PILOTO 1";
 }
 
 elements.check.addEventListener("click", checkAnswers);
@@ -450,4 +561,5 @@ elements.reset.addEventListener("click", resetBoard);
 elements.newGame.addEventListener("click", startNewGame);
 elements.nickname.addEventListener("input", updatePlayerName);
 
+renderPartsList();
 startNewGame();

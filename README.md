@@ -1,12 +1,13 @@
-# BYTE//CROSS — Cruzadinha de Arquitetura Computacional
+# HORIZON CROSS — Cruzadinha de Arquitetura Computacional
 
-Jogo de palavras cruzadas desenvolvido para praticar termos de Arquitetura Computacional diretamente no navegador.
+Jogo de palavras cruzadas desenvolvido para praticar termos de Arquitetura Computacional diretamente no navegador. O visual é inspirado em Forza Horizon 6 (festival no Japão, pôr do sol e monte Fuji) e cada palavra acertada instala uma peça de um carro na garagem. É um projeto de estudo, sem vínculo oficial com o jogo; o carro é um desenho original em SVG.
 
 ## Tecnologias
 
 - HTML5: estrutura semântica da página e dos controles.
-- CSS3: layout responsivo e identidade visual arcade.
-- JavaScript puro: geração da grade, seleção de palavras, preenchimento, conferência e pontuação.
+- CSS3: layout responsivo e identidade visual inspirada em Horizon (painéis angulares, botões em paralelogramo, tipografia itálica).
+- SVG inline: carro desenhado em 12 peças, que aparecem em contorno tracejado (planta) até serem instaladas.
+- JavaScript puro: geração da grade, seleção de palavras, preenchimento, conferência, pontuação e montagem do carro.
 - GitHub Pages: publicação como site estático.
 
 Não há backend, banco de dados, cadastro ou dependências de servidor. O nickname é apenas uma identificação visual local.
@@ -17,9 +18,30 @@ Não há backend, banco de dados, cadastro ou dependências de servidor. O nickn
 2. Digite um nickname (opcional).
 3. Escolha uma pista horizontal ou vertical.
 4. Digite as letras diretamente nas casas do tabuleiro. Os cruzamentos compartilham a mesma casa.
-5. Clique em **Conferir** para verificar as palavras completas.
-6. Use **Reiniciar** para limpar as letras sem trocar a grade.
+5. Clique em **Conferir** para verificar as palavras completas. Cada palavra correta instala a próxima peça do carro na **Garagem**.
+6. Use **Reiniciar** para limpar as letras e desmontar o carro, sem trocar a grade.
 7. Use **Nova partida** para gerar outra combinação aleatória de 12 palavras.
+
+## Montagem do carro
+
+A quantidade de palavras corretas define quantas peças estão instaladas, sempre nesta ordem:
+
+| # | Peça |
+|---|---|
+| 1 | Chassi |
+| 2 | Motor |
+| 3 | Escapamento |
+| 4 | Roda traseira |
+| 5 | Roda dianteira |
+| 6 | Carroceria |
+| 7 | Cabine |
+| 8 | Vidros |
+| 9 | Faróis |
+| 10 | Lanternas |
+| 11 | Aerofólio |
+| 12 | Pintura (carro completo) |
+
+Se uma palavra deixar de estar correta e o jogador conferir de novo, a peça mais recente volta a ser contorno. As peças ficam em `CAR_PARTS`, no `script.js`, e o desenho de cada uma fica no SVG do `index.html` (`data-part`).
 
 ## Palavras e pistas
 
@@ -50,7 +72,7 @@ A cada partida, o jogo seleciona 12 dos 16 termos da atividade e tenta montar um
 
 ```text
 arqcomp-cruzadinha/
-├── index.html
+├── index.html   # estrutura, cenário e SVG do carro
 ├── style.css
 ├── script.js
 └── README.md
@@ -70,6 +92,9 @@ O endereço seguirá o formato `https://SEU-USUARIO.github.io/arqcomp-cruzadinha
 ## Testes recomendados
 
 - Gerar várias partidas e confirmar que todas exibem 12 palavras conectadas.
+- Acertar palavras aos poucos e confirmar que as peças do carro são instaladas na ordem da tabela.
+- Acertar várias palavras de uma vez e conferir se o aviso lista todas as peças novas.
+- Completar as 12 palavras e verificar a pintura laranja e as listras no carro.
 - Preencher palavras horizontais, verticais e cruzamentos.
 - Conferir palavras corretas, incorretas e incompletas.
 - Reiniciar e confirmar que a grade e as pistas permanecem iguais.
@@ -87,6 +112,8 @@ feat: adiciona banco de palavras e pistas
 feat: implementa geração aleatória do tabuleiro
 feat: adiciona preenchimento e navegação pelas casas
 feat: implementa conferência e contador de acertos
+style: aplica tema Horizon e cenário do Japão
+feat: adiciona garagem com carro montado por peças
 fix: corrige comportamento de reiniciar a partida
 docs: documenta o jogo e a publicação
 ```
