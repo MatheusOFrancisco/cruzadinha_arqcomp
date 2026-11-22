@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#090b12">
+  <meta name="description" content="Jogo de palavras cruzadas sobre Arquitetura Computacional.">
+  <title>BYTE//CROSS — Arquitetura Computacional</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <header class="topbar">
+    <a class="brand" href="index.html" aria-label="BYTE CROSS início"><span class="brand-mark">▦</span> BYTE<span>//</span>CROSS</a>
+    <p class="topbar-tag">ARQUIVO DE DESAFIOS <span>● ONLINE</span></p>
+  </header>
+
+  <main class="page-shell">
+    <section class="intro-panel">
+      <div class="eyebrow">ARQUIVO 001 <span>·</span> ARQUITETURA COMPUTACIONAL</div>
+      <h1>QUE COMECE<br><span>O DESAFIO.</span></h1>
+      <p class="intro-copy">Decifre os termos, conecte as pistas e complete a grade. Cada partida monta uma nova combinação de palavras.</p>
+      <div class="player-row">
+        <label for="nickname">JOGADOR(A)</label>
+        <input id="nickname" type="text" maxlength="16" placeholder="SEU NICKNAME" autocomplete="nickname">
+      </div>
+    </section>
+
+    <section class="status-bar" aria-label="Status da partida">
+      <div><span class="status-label">JOGADOR</span><strong id="player-display">PLAYER 1</strong></div>
+      <div><span class="status-label">PALAVRAS</span><strong id="word-total">--</strong></div>
+      <div><span class="status-label">ACERTOS</span><strong id="score">0 / 0</strong></div>
+      <div><span class="status-label">STATUS</span><strong id="game-status" class="status-ready">AGUARDANDO</strong></div>
+    </section>
+
+    <section class="game-layout" aria-label="Jogo de palavras cruzadas">
+      <div class="board-panel panel">
+        <div class="panel-heading">
+          <div><span class="panel-index">01 / GRID</span><h2>CAMPO DE JOGO</h2></div>
+          <span class="live-indicator"><i></i> LIVE</span>
+        </div>
+        <div class="board-viewport">
+          <div id="crossword" class="crossword" aria-label="Tabuleiro de palavras cruzadas"></div>
+        </div>
+        <div class="board-legend">
+          <span><i class="legend-cell"></i> CASA EDITÁVEL</span>
+          <span><i class="legend-cell legend-correct"></i> CORRETA</span>
+          <span><i class="legend-cell legend-wrong"></i> INCORRETA</span>
+        </div>
+        <div class="action-row">
+          <button id="check-button" class="button button-primary" type="button">▶ CONFERIR</button>
+          <button id="reset-button" class="button button-secondary" type="button">↺ REINICIAR</button>
+          <button id="new-button" class="button button-ghost" type="button">＋ NOVA PARTIDA</button>
+        </div>
+        <p id="feedback" class="feedback" role="status" aria-live="polite">SELECIONE UMA PISTA OU UMA CASA PARA COMEÇAR.</p>
+      </div>
+
+      <aside class="clues-panel panel">
+        <div class="panel-heading">
+          <div><span class="panel-index">02 / CLUES</span><h2>LISTA DE PISTAS</h2></div>
+          <span class="clue-count" id="clue-count">00</span>
+        </div>
+        <div class="clue-section">
+          <h3><span class="direction-icon">→</span> HORIZONTAIS</h3>
+          <ol id="across-clues" class="clue-list"></ol>
+        </div>
+        <div class="clue-section">
+          <h3><span class="direction-icon vertical-icon">↓</span> VERTICAIS</h3>
+          <ol id="down-clues" class="clue-list"></ol>
+        </div>
+        <div class="hint-box"><span>!</span><p>CLIQUE EM UMA PISTA PARA DESTACAR A PALAVRA NO TABULEIRO.</p></div>
+      </aside>
+    </section>
+
+    <footer class="footer-line">
+      <span>BYTE//CROSS <b>v1.0</b></span>
+      <span>FEITO PARA APRENDER JOGANDO <b>_</b></span>
+    </footer>
+  </main>
+</body>
+</html>
